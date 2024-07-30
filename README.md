@@ -1,29 +1,34 @@
-mc_rtc new plugin template
+mc_ros_imu_sensor plugin
 ==
 
-This project is a template for a new plugin wihtin [mc_rtc]
-
-It comes with:
-- a CMake project that can build a plugin for [mc_rtc], the project can be put within [mc_rtc] source-tree for easier updates
-- clang-format files
-- automated GitHub Actions builds on three major platforms
+This project is a mc_rtc plugin, initially made to retrieve IMU data from Bota SensONE F/T sensor Ros topic.
+Can be reused to retrieve any Ros IMU message.
 
 Quick start
 --
 
-1. Renaming the controller from `RosImuSensor` to `RosImuSensor`. In a shell (Git Bash on Windows, replace sed with gsed on macOS):
+1. Build and install the project.
 
-```bash
-sed -i -e's/RosImuSensor/RosImuSensor/g' `find . -type f`
-git mv src/RosImuSensor.cpp src/RosImuSensor.cpp
-git mv src/RosImuSensor.h src/RosImuSensor.h
-git mv etc/RosImuSensor.in.yaml etc/RosImuSensor.in.yaml
-```
+	Note: If you are using [mc-rtc-superbuild](https://github.com/mc-rtc/mc-rtc-superbuild), create `mc_ros_imu_sensor.cmake`, inside mc-rtc-superbuild/extensions/plugins/. With the following content:    
+	
+	```cmake
+AddProject( mc_ros_imu_sensor
+  GITHUB bastien-muraccioli/mc_ros_imu_sensor
+  GIT_TAG origin/main
+  DEPENDS mc_rtc
+)
+	```
+	
+	  Then, you need to add it in the extensions/local.cmake and build the superbuild.
 
-2. You can customize the project name in vcpkg.json as well, note that this must follow [vcpkg manifest rules](https://github.com/microsoft/vcpkg/blob/master/docs/users/manifests.md)
-
-3. Build and install the project
-
-4. Run using your [mc_rtc] interface of choice, add `RosImuSensor` to the `Plugins` configuration entry or enable the autoload option
+2. Create `RosImuSensor.yaml` plugin config file, inside ~/.config/mc_rtc/plugins/. 
+    Precise in it, the reference frame of the IMU used in your xacro/urdf, and the name of the Ros topic.
+    E.g.
+    ```yaml
+reference_frame: FT_sensor_imu
+ros_imu_sensor: true
+ros_topic_sensor: /bus0/ft_sensor0/ft_sensor_readings/imu
+    ``` 
+3. Run using your [mc_rtc] interface of choice, add `RosImuSensor` to the `Plugins` configuration entry or enable the autoload option
 
 [mc_rtc]: https://jrl-umi3218.github.io/mc_rtc/

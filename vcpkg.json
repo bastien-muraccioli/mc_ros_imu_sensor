@@ -1,8 +1,8 @@
 {
-  "name": "mc-rtc-new-plugin",
+  "name": "mc_ros_imu_sensor",
   "version-string": "1.0.0",
   "homepage": "",
-  "description": "RosImuSensor for mc_rtc",
+  "description": "Get IMU message from Ros topic in mc_rtc",
   "dependencies": [
     "mc-rtc"
   ]
