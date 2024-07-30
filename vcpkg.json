@@ -1,5 +1,5 @@
 {
-  "name": "mc_ros_imu_sensor",
+  "name": "mc-ros-imu-sensor",
   "version-string": "1.0.0",
   "homepage": "",
   "description": "Get IMU message from Ros topic in mc_rtc",
