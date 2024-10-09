@@ -14,8 +14,12 @@ if(NOT TARGET mc_rtc::mc_control)
 endif()
 
 # To use ros
-find_package(catkin REQUIRED COMPONENTS roscpp)
-catkin_package(CATKIN_DEPENDS geometry_msgs roscpp roslib std_msgs)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+
+ament_package()
 message("=========== Catkin include directories : ${catkin_INCLUDE_DIRS}")
 include_directories(include ${catkin_INCLUDE_DIRS} $ENV{HOME}/.local/include)
 link_directories(${catkin_LIBRARY_DIRS} $ENV{HOME}/.local/lib)

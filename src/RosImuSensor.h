@@ -29,7 +29,7 @@ private:
   
   // IMU Sensor ROS
   bool ros_imu_sensor_;       // Flag to enable/disable the IMU sensor
-  std::shared_ptr<ros::NodeHandle> nh_; // ROS node handle
+  std::shared_ptr<rclcpp::Node> node; 
   std::thread spinThread_;              // Thread to spin the ROS node
   std::mutex mutex_;                    // Mutex to lock the IMU sensor data
   ROSImuSubscriber imu_sub_; // ROS IMU subscriber

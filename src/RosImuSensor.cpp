@@ -25,12 +25,12 @@ void RosImuSensor::init(mc_control::MCGlobalController & controller, const mc_rt
   if(ros_imu_sensor_)
   {
     // Initializing ROS node
-    nh_ = mc_rtc::ROSBridge::get_node_handle();
+    node = mc_rtc::ROSBridge::get_node_handle();
     spinThread_ = std::thread(std::bind(&RosImuSensor::rosSpinner, this));
 
     mc_rtc::log::info("[RosImuSensor][ROS] Subscribing to {}", imu_sensor_topic_);
 
-    imu_sub_.subscribe(*nh_, imu_sensor_topic_);
+    imu_sub_.subscribe(node, imu_sensor_topic_);
     imu_sub_.maxTime(maxTime_);
   }
 
@@ -87,10 +87,10 @@ mc_control::GlobalPlugin::GlobalPluginConfiguration RosImuSensor::configuration(
 void RosImuSensor::rosSpinner(void)
 {
   mc_rtc::log::info("[RosImuSensor][ROS Spinner] thread created for imu sensor reading");
-  ros::Rate r(freq_);
-  while(ros::ok())
+  rclcpp::Rate r(freq_);
+  while(rclcpp::ok())
   {
-    ros::spinOnce();
+    rclcpp::spin_some(node);
     r.sleep();
   }
   mc_rtc::log::info("[RosImuSensor][ROS Spinner] spinner destroyed");
