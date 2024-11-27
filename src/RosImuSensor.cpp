@@ -2,6 +2,7 @@
 
 #include <mc_control/GlobalPluginMacros.h>
 #include <mc_rbdyn/BodySensor.h>
+#include <mc_rtc/gui/ArrayLabel.h>
 
 namespace mc_plugin
 {
@@ -26,8 +27,6 @@ void RosImuSensor::init(mc_control::MCGlobalController & controller, const mc_rt
   bodySensor_name_ = config("body_sensor_name", (std::string) "Accelerometer");
   // config loaded
   maxTime_ = 1/freq_;
-
-
 
   if(ros_imu_sensor_)
   {
@@ -57,6 +56,15 @@ void RosImuSensor::init(mc_control::MCGlobalController & controller, const mc_rt
   {
     mc_rtc::log::info("[RosImuSensor] Body sensor {} found in the robot", bodySensor_name_);
   }
+
+  ctl.controller().gui()->addElement({"Plugins", "IMU"},
+                                    mc_rtc::gui::ArrayLabel(
+                                        "EndEffector",{"ax", "ay", "az", "ωx", "ωy", "ωz"},[this, &controller]()
+                                        {
+                                          auto linearAcceleration = controller.controller().robot().bodySensor(bodySensor_name_).linearAcceleration().transpose();
+                                          auto angularVelocity = controller.controller().robot().bodySensor(bodySensor_name_).angularVelocity().transpose();
+                                          return std::vector<double>{linearAcceleration.x(), linearAcceleration.y(), linearAcceleration.z(), angularVelocity.x(), angularVelocity.y(), angularVelocity.z()};
+                                        }));
   
 }
 
