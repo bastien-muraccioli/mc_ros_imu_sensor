@@ -64,10 +64,10 @@ void RosImuSensor::before(mc_control::MCGlobalController & controller)
   ctl.setSensorLinearAccelerations({{bodySensor_name_, imu_sub_.data().value().linear()}});
   ctl.setSensorAngularVelocities({{bodySensor_name_, imu_sub_.data().value().angular()}});
   
-  mc_rtc::log::info("[RosImuSensor][ROS] Linear acceleration: {} | Angular velocity: {}",
-    robot.bodySensor(bodySensor_name_).linearAcceleration().transpose(),
-    robot.bodySensor(bodySensor_name_).angularVelocity().transpose()
-  );
+  // mc_rtc::log::info("[RosImuSensor][ROS] Linear acceleration: {} | Angular velocity: {}",
+  //   robot.bodySensor(bodySensor_name_).linearAcceleration().transpose(),
+  //   robot.bodySensor(bodySensor_name_).angularVelocity().transpose()
+  // );
 }
 
 void RosImuSensor::after(mc_control::MCGlobalController & controller)
