@@ -11,7 +11,12 @@ RosImuSensor::~RosImuSensor() = default;
 void RosImuSensor::init(mc_control::MCGlobalController & controller, const mc_rtc::Configuration & config)
 {
   mc_rtc::log::info("RosImuSensor::init called with configuration:\n{}", config.dump(true, true));
+  auto & ctl = static_cast<mc_control::MCGlobalController &>(controller);
 
+  if(!ctl.controller().datastore().has("ros_spin"))
+  {
+     ctl.controller().datastore().make<bool>("ros_spin", false);
+  }
   // load config
   referenceFrame = config("reference_frame", (std::string) "FT_sensor_imu");
   verbose = config("verbose", false);
@@ -22,12 +27,17 @@ void RosImuSensor::init(mc_control::MCGlobalController & controller, const mc_rt
   // config loaded
   maxTime_ = 1/freq_;
 
+
+
   if(ros_imu_sensor_)
   {
     // Initializing ROS node
     node = mc_rtc::ROSBridge::get_node_handle();
-    spinThread_ = std::thread(std::bind(&RosImuSensor::rosSpinner, this));
-
+    if(!ctl.controller().datastore().get<bool>("ros_spin"))
+    {
+      spinThread_ = std::thread(std::bind(&RosImuSensor::rosSpinner, this));
+      ctl.controller().datastore().assign("ros_spin", true);
+    }
     mc_rtc::log::info("[RosImuSensor][ROS] Subscribing to {}", imu_sensor_topic_);
 
     imu_sub_.subscribe(node, imu_sensor_topic_);
@@ -59,7 +69,7 @@ void RosImuSensor::before(mc_control::MCGlobalController & controller)
 {
 
   //imuBodySensor = mc_rbdyn::BodySensor(bodySensor_name_, referenceFrame, sva::PTransformd::Identity());
-  auto & ctl = static_cast<mc_control::MCGlobalController &>(controller);//.controller();
+  auto & ctl = static_cast<mc_control::MCGlobalController &>(controller);
   auto & robot = ctl.robot();
   ctl.setSensorLinearAccelerations({{bodySensor_name_, imu_sub_.data().value().linear()}});
   ctl.setSensorAngularVelocities({{bodySensor_name_, imu_sub_.data().value().angular()}});
@@ -87,12 +97,21 @@ mc_control::GlobalPlugin::GlobalPluginConfiguration RosImuSensor::configuration(
 void RosImuSensor::rosSpinner(void)
 {
   mc_rtc::log::info("[RosImuSensor][ROS Spinner] thread created for imu sensor reading");
-  rclcpp::Rate r(freq_);
-  while(rclcpp::ok())
-  {
-    rclcpp::spin_some(node);
-    r.sleep();
-  }
+  #ifdef MC_RTC_ROS_IS_ROS2
+    rclcpp::Rate r(freq_);
+    while(rclcpp::ok())
+    {
+      rclcpp::spin_some(node);
+      r.sleep();
+    }
+  #else
+    ros::Rate r(freq_);
+    while(ros::ok())
+    {
+      ros::spinOnce();
+      r.sleep();
+    }
+  #endif
   mc_rtc::log::info("[RosImuSensor][ROS Spinner] spinner destroyed");
 }
 
