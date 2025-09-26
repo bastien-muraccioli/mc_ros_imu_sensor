@@ -57,6 +57,9 @@ void RosImuSensor::init(mc_control::MCGlobalController & controller, const mc_rt
     mc_rtc::log::info("[RosImuSensor] Body sensor {} found in the robot", bodySensor_name_);
   }
 
+  linear_acceleration_ = imu_sub_.data().value().linear();
+  angular_velocity_ = imu_sub_.data().value().angular();
+
   ctl.controller().gui()->addElement({"Plugins", "IMU"},
                                     mc_rtc::gui::ArrayLabel(
                                         "EndEffector",{"ax", "ay", "az", "ωx", "ωy", "ωz"},[this, &controller]()
@@ -65,6 +68,10 @@ void RosImuSensor::init(mc_control::MCGlobalController & controller, const mc_rt
                                           auto angularVelocity = controller.controller().robot().bodySensor(bodySensor_name_).angularVelocity().transpose();
                                           return std::vector<double>{linearAcceleration.x(), linearAcceleration.y(), linearAcceleration.z(), angularVelocity.x(), angularVelocity.y(), angularVelocity.z()};
                                         }));
+
+  // Log
+  ctl.controller().logger().addLogEntry("RosImuSensor_LinearAcceleration", [this]() { return linear_acceleration_; });
+  ctl.controller().logger().addLogEntry("RosImuSensor_AngularVelocity", [this]() { return angular_velocity_; });
   
 }
 
@@ -79,8 +86,10 @@ void RosImuSensor::before(mc_control::MCGlobalController & controller)
   //imuBodySensor = mc_rbdyn::BodySensor(bodySensor_name_, referenceFrame, sva::PTransformd::Identity());
   auto & ctl = static_cast<mc_control::MCGlobalController &>(controller);
   auto & robot = ctl.robot();
-  ctl.setSensorLinearAccelerations({{bodySensor_name_, imu_sub_.data().value().linear()}});
-  ctl.setSensorAngularVelocities({{bodySensor_name_, imu_sub_.data().value().angular()}});
+  linear_acceleration_ = imu_sub_.data().value().linear();
+  angular_velocity_ = imu_sub_.data().value().angular();
+  ctl.setSensorLinearAccelerations({{bodySensor_name_, linear_acceleration_}});
+  ctl.setSensorAngularVelocities({{bodySensor_name_, angular_velocity_}});
   
   // mc_rtc::log::info("[RosImuSensor][ROS] Linear acceleration: {} | Angular velocity: {}",
   //   robot.bodySensor(bodySensor_name_).linearAcceleration().transpose(),

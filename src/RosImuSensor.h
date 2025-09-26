@@ -47,6 +47,8 @@ private:
   double freq_;                 // Frequency of the IMU sensor
   std::string imu_sensor_topic_; // IMU sensor topic
   std::string bodySensor_name_; // Name of the body sensor
+  Eigen::Vector3d linear_acceleration_; // Linear acceleration
+  Eigen::Vector3d angular_velocity_; // Angular velocity
 
   double maxTime_;              // Maximum time for the IMU sensor
   // mc_rbdyn::BodySensor & imuBodySensor; // Body sensor for the IMU sensor

@@ -3,7 +3,7 @@
 #include <thread>
 #include <SpaceVecAlg/SpaceVecAlg>
 #include <Eigen/src/Geometry/Quaternion.h>
-#include <mc_rtc/ros.h>
+#include <mc_rtc_ros/ros.h>
 
 #include <geometry_msgs/msg/accel_stamped.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
