@@ -1,1 +1,6 @@
 ---
+reference_frame: FT_sensor_imu
+verbose: false
+ros_topic_sensor: /bota_ft_sensor/imu
+imu_freq: 1000
+body_sensor_name: Accelerometer
