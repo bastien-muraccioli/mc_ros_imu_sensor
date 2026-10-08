@@ -3,6 +3,7 @@
 #include <mc_control/GlobalPluginMacros.h>
 #include <mc_rbdyn/BodySensor.h>
 #include <mc_rtc/gui/ArrayLabel.h>
+#include <mc_rtc/gui/Label.h>
 
 namespace mc_plugin
 {
@@ -57,10 +58,12 @@ void RosImuSensor::init(mc_control::MCGlobalController & controller, const mc_rt
   linear_acceleration_ = imu_sub_.data().value().linear();
   angular_velocity_ = imu_sub_.data().value().angular();
 
+  ctl.controller().gui()->addElement({"Plugins", "RosIMUSensor"}, mc_rtc::gui::Label("Ros Topic", imu_sensor_topic_));
+
   ctl.controller().gui()->addElement(
       {"Plugins", "RosIMUSensor"},
       mc_rtc::gui::ArrayLabel(
-          "EndEffector", {"ax", "ay", "az", "ωx", "ωy", "ωz"},
+          "IMU", {"ax", "ay", "az", "ωx", "ωy", "ωz"},
           [this, &controller]()
           {
             auto linearAcceleration =

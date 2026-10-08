@@ -1,9 +1,9 @@
 #include <mc_rtc/logging.h>
-#include <mutex>
-#include <thread>
 #include <SpaceVecAlg/SpaceVecAlg>
 #include <Eigen/src/Geometry/Quaternion.h>
 #include <mc_rtc_ros/ros.h>
+#include <mutex>
+#include <thread>
 
 #include <geometry_msgs/msg/accel_stamped.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
@@ -15,8 +15,6 @@
 #include <std_msgs/msg/float64.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/subscription.hpp>
-
-
 
 /**
  * @brief Describes data obtained by a subscriber, along with the time since it
@@ -130,7 +128,9 @@ struct ROSSubscriber : public Subscriber<TargetType>
 
   void subscribe(std::shared_ptr<rclcpp::Node> & node, const std::string & topic, const unsigned bufferSize = 1)
   {
-    sub_ = node->create_subscription<ROSMessageType>(topic, bufferSize, std::bind(&ROSSubscriber::callback, this, std::placeholders::_1));
+    auto qos = rclcpp::SensorDataQoS().keep_last(bufferSize); // BEST_EFFORT, VOLATILE
+    sub_ = node->create_subscription<ROSMessageType>(topic, qos,
+                                                     std::bind(&ROSSubscriber::callback, this, std::placeholders::_1));
   }
 
   std::string topic() const
@@ -157,12 +157,14 @@ protected:
 struct ROSPoseStampedSubscriber : public ROSSubscriber<geometry_msgs::msg::PoseStamped, sva::PTransformd>
 {
   ROSPoseStampedSubscriber()
-  : ROSSubscriber([](const geometry_msgs::msg::PoseStamped & msg) {
-      const auto & t = msg.pose.position;
-      const auto & r = msg.pose.orientation;
-      auto pose = sva::PTransformd(Eigen::Quaterniond{r.w, r.x, r.y, r.z}.inverse(), Eigen::Vector3d{t.x, t.y, t.z});
-      return pose;
-    })
+  : ROSSubscriber(
+      [](const geometry_msgs::msg::PoseStamped & msg)
+      {
+        const auto & t = msg.pose.position;
+        const auto & r = msg.pose.orientation;
+        auto pose = sva::PTransformd(Eigen::Quaterniond{r.w, r.x, r.y, r.z}.inverse(), Eigen::Vector3d{t.x, t.y, t.z});
+        return pose;
+      })
   {
   }
 };
@@ -170,12 +172,14 @@ struct ROSPoseStampedSubscriber : public ROSSubscriber<geometry_msgs::msg::PoseS
 struct ROSAccelStampedSubscriber : public ROSSubscriber<geometry_msgs::msg::AccelStamped, sva::MotionVecd>
 {
   ROSAccelStampedSubscriber()
-  : ROSSubscriber([](const geometry_msgs::msg::AccelStamped & msg) {
-      const auto & a = msg.accel.linear;
-      const auto & w = msg.accel.angular;
-      auto acc = sva::MotionVecd(Eigen::Vector3d{w.x, w.y, w.z}, Eigen::Vector3d{a.x, a.y, a.z});
-      return acc;
-    })
+  : ROSSubscriber(
+      [](const geometry_msgs::msg::AccelStamped & msg)
+      {
+        const auto & a = msg.accel.linear;
+        const auto & w = msg.accel.angular;
+        auto acc = sva::MotionVecd(Eigen::Vector3d{w.x, w.y, w.z}, Eigen::Vector3d{a.x, a.y, a.z});
+        return acc;
+      })
   {
   }
 };
@@ -183,12 +187,14 @@ struct ROSAccelStampedSubscriber : public ROSSubscriber<geometry_msgs::msg::Acce
 struct ROSWrenchStampedSubscriber : public ROSSubscriber<geometry_msgs::msg::WrenchStamped, sva::ForceVecd>
 {
   ROSWrenchStampedSubscriber()
-  : ROSSubscriber([](const geometry_msgs::msg::WrenchStamped & msg) {
-      const auto & f = msg.wrench.force;
-      const auto & m = msg.wrench.torque;
-      auto wrench = sva::ForceVecd(Eigen::Vector3d{m.x, m.y, m.z}, Eigen::Vector3d{f.x, f.y, f.z});
-      return wrench;
-    })
+  : ROSSubscriber(
+      [](const geometry_msgs::msg::WrenchStamped & msg)
+      {
+        const auto & f = msg.wrench.force;
+        const auto & m = msg.wrench.torque;
+        auto wrench = sva::ForceVecd(Eigen::Vector3d{m.x, m.y, m.z}, Eigen::Vector3d{f.x, f.y, f.z});
+        return wrench;
+      })
   {
   }
 };
@@ -199,20 +205,23 @@ struct ROSWrenchStampedSubscriber : public ROSSubscriber<geometry_msgs::msg::Wre
 //   Eigen::Vector3d angular_velocity;
 //   Eigen::Vector3d linear_acceleration;
 //   Eigen::Quaterniond quaternion;
-//   IMU(Eigen::Vector3d angular_velocity, Eigen::Vector3d linear_acceleration, Eigen::Quaterniond quaternion) : angular_velocity(angular_velocity), linear_acceleration(linear_acceleration), quaternion(quaternion) {}
+//   IMU(Eigen::Vector3d angular_velocity, Eigen::Vector3d linear_acceleration, Eigen::Quaterniond quaternion) :
+//   angular_velocity(angular_velocity), linear_acceleration(linear_acceleration), quaternion(quaternion) {}
 // };
 
 struct ROSImuSubscriber : public ROSSubscriber<sensor_msgs::msg::Imu, sva::MotionVecd>
 {
   ROSImuSubscriber()
-  : ROSSubscriber([](const sensor_msgs::msg::Imu & msg) {
-      const auto & angular_velocity = msg.angular_velocity;
-      const auto & linear_acceleration = msg.linear_acceleration;
-      auto imu = sva::MotionVecd(
-        Eigen::Vector3d{angular_velocity.x, angular_velocity.y, angular_velocity.z},
-        Eigen::Vector3d{linear_acceleration.x, linear_acceleration.y, linear_acceleration.z});
-      return imu;
-  })
+  : ROSSubscriber(
+      [](const sensor_msgs::msg::Imu & msg)
+      {
+        const auto & angular_velocity = msg.angular_velocity;
+        const auto & linear_acceleration = msg.linear_acceleration;
+        auto imu =
+            sva::MotionVecd(Eigen::Vector3d{angular_velocity.x, angular_velocity.y, angular_velocity.z},
+                            Eigen::Vector3d{linear_acceleration.x, linear_acceleration.y, linear_acceleration.z});
+        return imu;
+      })
   {
   }
 };
